@@ -1,0 +1,17 @@
+#ifndef _GY953_UART_H
+#define _GY953_UART_H
+
+#include "uart_handler.h"
+#include "delay.h"
+const static uint8_t cmd_data_rate_50hz[] = {0xA5, 0xA4, 0x49};
+const static uint8_t cmd_data_rate_100hz[] = {0xA5, 0xA6, 0x4A};
+const static uint8_t cmd_data_rate_200hz[] = {0xA5, 0xA6, 0x4B};
+const static uint8_t cmd_get_euler[] = {0xA5, 0x45, 0xEA};
+const static uint8_t cmd_get_magnetic[] = {0xA5, 0x35, 0xDA};
+const static uint8_t cmd_get_accelerator[] = {0xA5, 0x15, 0xBA};
+const static uint8_t cmd_get_gyroscope[] = {0xA5, 0x25, 0xCA};
+extern float roll, pitch, yaw;
+extern int16_t gyro_x_raw, gyro_y_raw, gyro_z_raw;
+void GY953_Init(void);
+void GY953_RX_Callback(void);
+#endif

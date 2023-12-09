@@ -1,0 +1,80 @@
+#include "GY953_UART.h"
+typedef union {
+    uint16_t   U16Data;
+    int16_t    I16Data;
+    uint8_t    C8Data[2];
+}DataJointUnion;
+static DataJointUnion resolveUnion;
+int16_t roll_raw, pitch_raw, yaw_raw = 0;
+float roll, pitch, yaw = 0.0f;
+int16_t gyro_x_raw, gyro_y_raw, gyro_z_raw = 0;
+void GY953_Init(void)
+{
+    UART_InstanceInit(&UART_GY953_Handler, USART2, DMA1, LL_DMA_STREAM_5, DMA1, LL_DMA_STREAM_6, 22);
+    UART_TransmitFromBuffer(&UART_GY953_Handler, cmd_data_rate_100hz, sizeof(cmd_data_rate_100hz)); // 以 100Hz 的回传频率处理数据
+    delay_ms(500); // 等待 500ms, 如果没有回传数据, 说明 GY953 传感器未使能（因为同一个指令可以切换开关）
+    if(UART_GetRxLen(&UART_GY953_Handler) == 0)
+    {
+        // UART_printf(&UART1_Handler, 1, "GY953 not initialized!!\n");
+        // UART_TransmitFromBuffer(&UART_GY953_Handler, cmd_data_rate_200hz, sizeof(cmd_data_rate_200hz));
+        // UART_TransmitFromBuffer(&UART_GY953_Handler, cmd_get_euler, sizeof(cmd_get_euler));
+        UART_TransmitFromBuffer(&UART_GY953_Handler, cmd_get_euler, sizeof(cmd_get_euler));
+        delay_ms(100);
+        UART_TransmitFromBuffer(&UART_GY953_Handler, cmd_get_accelerator, sizeof(cmd_get_accelerator));
+    }
+    UART_FlushRxFifo(&UART_GY953_Handler);
+    // 之后再注册回调函数开始对数据进行处理
+    UART_RegisterRxCallback(&UART_GY953_Handler, GY953_RX_Callback);
+    // delay_ms(500);
+    // UART_printf(&UART1_Handler, 1, "r: %d, p: %d, y:%d\n", roll_raw, pitch_raw, yaw_raw);
+}
+static uint16_t gy953_ret_len = 0;
+static uint8_t gy953_read_buffer[16] = {0};
+void GY953_RX_Callback(void)
+{
+    gy953_ret_len = UART_GetRxLen(&UART_GY953_Handler);
+    if(gy953_ret_len > 0)
+    {
+        // 判断帧头, 若不为连续的两个 0x5A 则丢弃数据包
+        if(UART_PeekRxFifo(&UART_GY953_Handler, 0) != 0x5A || UART_PeekRxFifo(&UART_GY953_Handler, 1) != 0x5A)
+        {
+            UART_FlushRxFifo(&UART_GY953_Handler);
+            return;
+        }
+        UART_GetRxFifo(&UART_GY953_Handler, gy953_read_buffer, gy953_ret_len);
+        UART_printf(&UART1_Handler, 1, "%x", gy953_read_buffer[2]);
+        switch(gy953_read_buffer[2])
+        {
+            case 0x25: // 陀螺仪原始数
+                resolveUnion.C8Data[1] = gy953_read_buffer[4];
+                resolveUnion.C8Data[0] = gy953_read_buffer[5];
+                gyro_x_raw = resolveUnion.I16Data;
+                resolveUnion.C8Data[1] = gy953_read_buffer[6];
+                resolveUnion.C8Data[0] = gy953_read_buffer[7];
+                gyro_y_raw = resolveUnion.I16Data;
+                resolveUnion.C8Data[1] = gy953_read_buffer[8];
+                resolveUnion.C8Data[0] = gy953_read_buffer[9];
+                gyro_z_raw = resolveUnion.I16Data;
+                break;
+            case 0x45: // 欧拉角数据
+                resolveUnion.C8Data[1] = gy953_read_buffer[4];
+                resolveUnion.C8Data[0] = gy953_read_buffer[5];
+                roll_raw = resolveUnion.I16Data;
+                resolveUnion.C8Data[1] = gy953_read_buffer[6];
+                resolveUnion.C8Data[0] = gy953_read_buffer[7];
+                pitch_raw = resolveUnion.I16Data;
+                resolveUnion.C8Data[1] = gy953_read_buffer[8];
+                resolveUnion.C8Data[0] = gy953_read_buffer[9];
+                yaw_raw = resolveUnion.I16Data;
+                roll = roll_raw * 0.01f;
+                pitch = pitch_raw * 0.01f;
+                yaw = yaw_raw * 0.01f;
+                break;
+            case 0x15: // 加速度原始数
+                break;
+            case 0x35: // 磁力计原始数
+                break;
+            default: break;
+        }
+    }
+}

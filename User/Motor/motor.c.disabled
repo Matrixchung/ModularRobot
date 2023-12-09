@@ -1,0 +1,36 @@
+#include "motor.h"
+int16_t motor_left_speed = 0, motor_right_speed = 0;
+void motor_init(void)
+{
+    LL_TIM_CC_EnableChannel(TIM1, LL_TIM_CHANNEL_CH1);
+    LL_TIM_CC_EnableChannel(TIM1, LL_TIM_CHANNEL_CH2);
+    LL_TIM_OC_SetCompareCH1(TIM1, 0);
+    LL_TIM_OC_SetCompareCH2(TIM1, 0);
+    LL_TIM_EnableCounter(TIM1);
+    LL_TIM_EnableAllOutputs(TIM1);
+}
+void motor_set_speed(void)
+{
+    // motor_left_speed = _constrain(motor_left_speed, -MOTOR_MAX_COMPARE, MOTOR_MAX_COMPARE);
+    // motor_right_speed = _constrain(motor_right_speed, -MOTOR_MAX_COMPARE, MOTOR_MAX_COMPARE);
+    if(motor_left_speed >= 0)
+    {
+        // LL_TIM_OC_SetCompareCH1(TIM2, motor_left_speed + 1500 + MOTOR_LEFT_POS_DEADZONE);
+        LL_TIM_OC_SetCompareCH1(TIM2, _constrain(motor_left_speed + (MOTOR_LEFT_POS_DEADZONE), -MOTOR_MAX_COMPARE, MOTOR_MAX_COMPARE) + 1500);
+    }
+    else
+    {
+        LL_TIM_OC_SetCompareCH1(TIM2, _constrain(motor_left_speed + (MOTOR_LEFT_NEG_DEADZONE), -MOTOR_MAX_COMPARE, MOTOR_MAX_COMPARE) + 1500);
+    }
+    if(motor_right_speed >= 0)
+    {
+        LL_TIM_OC_SetCompareCH2(TIM2, _constrain(motor_right_speed + (MOTOR_RIGHT_POS_DEADZONE), -MOTOR_MAX_COMPARE, MOTOR_MAX_COMPARE) + 1500);
+    }
+    else
+    {
+        LL_TIM_OC_SetCompareCH2(TIM2, _constrain(motor_right_speed + (MOTOR_RIGHT_NEG_DEADZONE), -MOTOR_MAX_COMPARE, MOTOR_MAX_COMPARE) + 1500);
+    }
+    // else LL_TIM_OC_SetCompareCH1(TIM2, motor_left_speed + 1500 + MOTOR_LEFT_NEG_DEADZONE);
+    // if(motor_right_speed >= 0) LL_TIM_OC_SetCompareCH2(TIM2, motor_right_speed + 1500 + MOTOR_RIGHT_POS_DEADZONE);
+    // else LL_TIM_OC_SetCompareCH2(TIM2, motor_right_speed + 1500 + MOTOR_RIGHT_NEG_DEADZONE);
+}

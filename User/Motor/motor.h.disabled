@@ -1,0 +1,19 @@
+#ifndef _MOTOR_H
+#define _MOTOR_H
+
+#include "main.h"
+
+// MG995 带标舵机: [-60, 47], 右轮
+// 不带标的舵机: [-44, 64]
+// motor_set_speed 默认 TIM2_CH1 为左轮
+#define MOTOR_MAX_COMPARE 1000
+#define MOTOR_LEFT_POS_DEADZONE 43
+#define MOTOR_LEFT_NEG_DEADZONE -63
+#define MOTOR_RIGHT_POS_DEADZONE 46
+#define MOTOR_RIGHT_NEG_DEADZONE -60
+
+extern int16_t motor_left_speed, motor_right_speed;
+void motor_init(void);
+void motor_set_speed(void);
+
+#endif

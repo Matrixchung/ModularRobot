@@ -1,0 +1,30 @@
+{
+    "MicroPython.executeButton": [
+        {
+            "text": "▶",
+            "tooltip": "Run",
+            "alignment": "left",
+            "command": "extension.executeFile",
+            "priority": 3.5
+        }
+    ],
+    "MicroPython.syncButton": [
+        {
+            "text": "$(sync)",
+            "tooltip": "sync",
+            "alignment": "left",
+            "command": "extension.execute",
+            "priority": 4
+        }
+    ],
+    "cortex-debug.armToolchainPath": "C:\\arm-gnu-toolchain\\bin",
+    "cortex-debug.openocdPath": "C:\\OPENOCD\\BIN\\OPENOCD.EXE",
+    "files.associations": {
+        "gy953.h": "c",
+        "control.h": "c",
+        "motor.h": "c",
+        "encoder.h": "c",
+        "main.h": "c",
+        "imu_utils.h": "c"
+    }
+}
